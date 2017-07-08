@@ -29,8 +29,6 @@ pub fn auto_pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
 }
 
 pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
-    let mut output = String::new();
-
     let ip: String = match db.ip.is_empty() {
         true => {
             let temp = get_str_line("Enter Hue Bridge IP: ");
@@ -40,8 +38,8 @@ pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
         false => db.ip.clone(),
     };
 
-    if !db.username.is_empty() {
-        output = String::from("Already configured");
+    let output = if !db.username.is_empty() {
+        Ok(String::from("Already configured"))
     } else {
         let mut core = Core::new()?;
         let client = Client::new(&core.handle());
@@ -60,20 +58,18 @@ pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
         let v: Value = serde_json::from_slice(&posted).unwrap();
 
         if v[0]["error"] != Value::Null {
-            db.ip = ip;
-            output = String::from(
+            Ok(String::from(
                 "Press the pairing button on Hue Bridge and run init again...",
-            );
+            ))
         } else if v[0]["success"]["username"] != Value::Null {
-            db.ip = ip;
             db.username = String::from(v[0]["success"]["username"].as_str().unwrap());
-            output = String::from("Pairing Successful!");
             save_db(db);
+            Ok(String::from("Pairing Successful!"))
         } else {
-            output = String::from("Seems that that IP was wrong...");
+            Ok(String::from("Seems that that IP was wrong..."))
         }
     };
-    Ok(output)
+    output
 }
 
 fn get_light_map(db: &DB) -> Result<HashMap<String, Light>, hyper::Error> {

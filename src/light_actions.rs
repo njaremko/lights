@@ -4,10 +4,8 @@ use hyper::{self, Request, Method};
 use regex::Regex;
 use serde_json::{self, Value};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{self, stdin, stdout, Write};
-use std::path::Path;
 use structs::*;
+use utils::*;
 
 pub fn auto_pair_hue(mut state: State) -> Result<String, hyper::Error> {
     if state.db.ip.is_empty() {
@@ -84,7 +82,7 @@ pub fn pair_hue(mut state: State) -> Result<String, hyper::Error> {
             }
             String::from("Pairing Successful!")
         } else {
-            String::from("Seems that that IP was wrong...")
+            String::from("Seems that IP was wrong...")
         }
     };
     Ok(output)
@@ -171,20 +169,4 @@ pub fn sleep(mut state: State) -> Result<String, hyper::Error> {
         }
     }
     Ok(String::from("Goodnight!"))
-}
-
-pub fn get_str_line(line: &str) -> Result<String, io::Error> {
-    let mut s = String::new();
-    print!("{}", line);
-    stdout().flush()?;
-    stdin().read_line(&mut s)?;
-    Ok(s.trim_right_matches(|c| c == '\n' || c == '\r').to_string())
-}
-
-pub fn save_db(db: &DB) -> Result<(), io::Error> {
-    let path = Path::new(DB_PATH_STRING);
-    let serialized = serde_json::to_string(&db)?;
-    let mut file = File::create(&path)?;
-    file.write_all(serialized.as_bytes())?;
-    Ok(())
 }

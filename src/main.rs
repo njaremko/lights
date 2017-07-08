@@ -12,6 +12,7 @@ extern crate tokio_core;
 mod group_actions;
 mod light_actions;
 mod structs;
+mod utils;
 
 use clap::{App, Arg, SubCommand};
 use group_actions::*;

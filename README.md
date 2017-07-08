@@ -17,10 +17,10 @@ FLAGS:
     -V, --version    Prints version information
 
 SUBCOMMANDS:
-    group    Lists all groups
+    group    Perform operations on groups
     help     Prints this message or the help of the given subcommand(s)
     init     Pair with Hue Bridge
-    list     Lists all groups
+    list     Lists all lights
     off      Turn light off
     on       Turn light on
     sleep    Turn all lights off

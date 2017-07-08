@@ -1,10 +1,10 @@
-use structs::*;
-use regex::Regex;
-use hyper::header::{ContentLength, ContentType};
-use std::collections::HashMap;
 use futures::{Future, Stream};
+use hyper::header::{ContentLength, ContentType};
 use hyper::{self, Request, Method};
+use regex::Regex;
 use serde_json::{self, Value};
+use std::collections::HashMap;
+use structs::*;
 
 fn get_group_map(state: &mut State) -> Result<HashMap<String, Group>, hyper::Error> {
     let uri = format!("http://{}/api/{}/groups", &state.db.ip, &state.db.username);

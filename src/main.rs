@@ -9,13 +9,13 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio_core;
 
-mod light_actions;
 mod group_actions;
+mod light_actions;
 mod structs;
 
-use light_actions::*;
-use group_actions::*;
 use clap::{App, Arg, SubCommand};
+use group_actions::*;
+use light_actions::*;
 use structs::*;
 
 fn main() {

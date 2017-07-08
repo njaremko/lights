@@ -68,6 +68,9 @@ fn main() {
         }
         _ => return,
     };
-
-    println!("{}", output);
+    
+    match output {
+        Ok(val) => println!("{}", val),
+        Err(err) => println!("{}", err),
+    }
 }

@@ -1,11 +1,11 @@
-use std::collections::HashMap;
-use std::path::Path;
-use tokio_core::reactor::Core;
+use hyper::client::HttpConnector;
 use hyper::{Body, Client};
+use serde_json;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
-use serde_json;
-use hyper::client::HttpConnector;
+use std::path::Path;
+use tokio_core::reactor::Core;
 
 pub static DB_PATH_STRING: &str = "config";
 

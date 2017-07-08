@@ -5,7 +5,7 @@
 I might expand it into a general smart home CLI, we'll see.
 
 ```
-lights 1.0
+lights 0.1.0
 Nathan J. <njaremko@gmail.com>
 Home Lighting Controller
 

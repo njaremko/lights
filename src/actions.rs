@@ -15,12 +15,12 @@ pub fn auto_pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
         let mut core = Core::new()?;
         let client = Client::new(&core.handle());
         let uri = String::from("https://www.meethue.com/api/nupnp");
-        let get = client.get(uri.parse()?).and_then(|res| {
-            res.body().concat2()
-        });
+        let get = client
+            .get(uri.parse()?)
+            .and_then(|res| res.body().concat2());
         let got = core.run(get).unwrap();
-        let v: Value = serde_json::from_slice(&got).unwrap();    
-        if  v["internalipaddress"] != Value::Null {
+        let v: Value = serde_json::from_slice(&got).unwrap();
+        if v["internalipaddress"] != Value::Null {
             db.ip = String::from(v["internalipaddress"].as_str().unwrap());
         }
         save_db(db);
@@ -36,8 +36,8 @@ pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
             let temp = get_str_line("Enter Hue Bridge IP: ");
             save_db(db);
             temp
-        },
-        false  => db.ip.clone(),
+        }
+        false => db.ip.clone(),
     };
 
     if !db.username.is_empty() {
@@ -49,22 +49,22 @@ pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
         uri.push_str(&ip);
         uri.push_str("/api");
 
-        let json = r#"{"devicetype":"lights cli"}"#; 
+        let json = r#"{"devicetype":"lights cli"}"#;
         let mut request = Request::new(Method::Post, uri.parse().unwrap());
         request.headers_mut().set(ContentType::json());
         request.headers_mut().set(ContentLength(json.len() as u64));
         request.set_body(json);
 
-        let work = client.request(request).and_then(|res| {
-            res.body().concat2()
-        });
+        let work = client.request(request).and_then(|res| res.body().concat2());
         let posted = core.run(work).unwrap();
-        let v: Value = serde_json::from_slice(&posted).unwrap();    
+        let v: Value = serde_json::from_slice(&posted).unwrap();
 
         if v[0]["error"] != Value::Null {
             db.ip = ip;
-            output = String::from("Press the pairing button on Hue Bridge and run init again...");
-        } else if v[0]["success"]["username"] != Value::Null { 
+            output = String::from(
+                "Press the pairing button on Hue Bridge and run init again...",
+            );
+        } else if v[0]["success"]["username"] != Value::Null {
             db.ip = ip;
             db.username = String::from(v[0]["success"]["username"].as_str().unwrap());
             output = String::from("Pairing Successful!");
@@ -84,16 +84,16 @@ fn get_light_map(db: &DB) -> Result<HashMap<String, Light>, hyper::Error> {
     uri.push_str("/api/");
     uri.push_str(&db.username);
     uri.push_str("/lights");
-    let get = client.get(uri.parse()?).and_then(|res| {
-        res.body().concat2()
-    });
+    let get = client
+        .get(uri.parse()?)
+        .and_then(|res| res.body().concat2());
     let got = core.run(get).unwrap();
     let v: HashMap<String, Light> = serde_json::from_slice(&got).unwrap();
     Ok(v)
 }
 
 fn toggle_light(db: &DB, id: &str, on: bool) -> Result<(), hyper::Error> {
-    let state = json!({"on": on});
+    let state = json!({ "on": on });
     let json = Value::to_string(&state);
     let mut core = Core::new()?;
     let client = Client::new(&core.handle());
@@ -108,9 +108,7 @@ fn toggle_light(db: &DB, id: &str, on: bool) -> Result<(), hyper::Error> {
     request.headers_mut().set(ContentType::json());
     request.headers_mut().set(ContentLength(json.len() as u64));
     request.set_body(json);
-    let work = client.request(request).and_then(|res| {
-        res.body().concat2()
-    });
+    let work = client.request(request).and_then(|res| res.body().concat2());
     core.run(work).unwrap();
     Ok(())
 }
@@ -146,9 +144,7 @@ pub fn light_off(db: DB, search: &str) -> Result<String, hyper::Error> {
 }
 
 pub fn sleep(db: DB) -> Result<String, hyper::Error> {
-
     let v = get_light_map(&db).unwrap();
-
     for (light_num, _) in &v {
         match toggle_light(&db, light_num, false) {
             Ok(_) => (),

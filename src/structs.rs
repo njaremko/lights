@@ -1,6 +1,42 @@
 use std::collections::HashMap;
+use std::path::Path;
+use tokio_core::reactor::Core;
+use hyper::{Body, Client};
+use std::fs::File;
+use std::io::prelude::*;
+use serde_json;
+use hyper::client::HttpConnector;
 
 pub static DB_PATH_STRING: &str = "config";
+
+#[derive(Debug)]
+pub struct State {
+    pub client: Client<HttpConnector, Body>,
+    pub core: Core,
+    pub db: DB,
+}
+
+impl State {
+    pub fn new() -> State {
+        let path = Path::new(DB_PATH_STRING);
+        let core = Core::new().unwrap();
+        State {
+            client: Client::new(&core.handle()),
+            core: core,
+            db: match path.exists() {
+                true => {
+                    let mut s = String::new();
+                    File::open(&path).unwrap().read_to_string(&mut s).unwrap();
+                    serde_json::from_str(&s).unwrap()
+                }
+                false => DB {
+                    ip: String::new(),
+                    username: String::new(),
+                },
+            },
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DB {

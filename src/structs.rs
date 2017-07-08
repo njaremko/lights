@@ -1,7 +1,6 @@
 use hyper::client::HttpConnector;
 use hyper::{Body, Client};
 use serde_json;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
@@ -81,4 +80,38 @@ pub struct Light {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Lights(pub HashMap<String, Light>);
+pub struct Group {
+    pub name: String,
+    pub lights: Vec<String>,
+    #[serde(rename = "type")]
+    pub group_type: String,
+    pub state: GroupState,
+    pub recycle: bool,
+    pub class: String,
+    pub action: GroupAction,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GroupState {
+    pub all_on: bool,
+    pub any_on: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GroupAction {
+    pub on: bool,
+    pub bri: u8,
+    #[serde(default)]
+    pub hue: u32,
+    #[serde(default)]
+    pub sat: u8,
+    #[serde(default)]
+    pub effect: String,
+    #[serde(default)]
+    pub xy: [f64; 2],
+    #[serde(default)]
+    pub ct: u32,
+    pub alert: String,
+    #[serde(default)]
+    pub colormode: String,
+}

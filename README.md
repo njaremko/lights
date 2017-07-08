@@ -4,7 +4,7 @@
 
 I might expand it into a general smart home CLI, we'll see.
 
-`
+```
 lights 1.0
 Nathan J. <njaremko@gmail.com>
 Home Lighting Controller
@@ -24,4 +24,4 @@ USAGE:
                 off      Turn light off
                 on       Turn light on
                 sleep    Turn all lights off
-`
+```

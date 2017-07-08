@@ -12,16 +12,16 @@ Home Lighting Controller
 USAGE:
     lights [SUBCOMMAND]
 
-    FLAGS:
-        -h, --help       Prints help information
-        -V, --version    Prints version information
+FLAGS:
+    -h, --help       Prints help information
+    -V, --version    Prints version information
 
-            SUBCOMMANDS:
-                group    Lists all groups
-                help     Prints this message or the help of the given subcommand(s)
-                init     Pair with Hue Bridge
-                list     Lists all groups
-                off      Turn light off
-                on       Turn light on
-                sleep    Turn all lights off
+SUBCOMMANDS:
+    group    Lists all groups
+    help     Prints this message or the help of the given subcommand(s)
+    init     Pair with Hue Bridge
+    list     Lists all groups
+    off      Turn light off
+    on       Turn light on
+    sleep    Turn all lights off
 ```

@@ -27,7 +27,7 @@ fn main() {
             File::open(&path).unwrap().read_to_string(&mut s).unwrap();
             serde_json::from_str(&s).unwrap()
         }
-        false => DB { username: String::from("") },
+        false => DB { ip: String::new(), username: String::new() },
     };
 
     let matches = App::new("lights")

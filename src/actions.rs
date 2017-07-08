@@ -7,6 +7,7 @@ use std::io::{stdin, stdout, Write};
 use std::path::Path;
 use structs::*;
 use tokio_core::reactor::Core;
+use std::collections::HashMap;
 
 pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
     let mut output = String::new();
@@ -51,6 +52,28 @@ pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
         }
     };
     Ok(output)
+}
+
+fn get_light_map(db: &DB) -> Result<HashMap<String, Light>, hyper::Error> {
+    let mut core = Core::new()?;
+    let client = Client::new(&core.handle());
+    let mut uri = String::from("http://");
+    uri.push_str(&db.ip);
+    uri.push_str("/api/");
+    uri.push_str(&db.username);
+    uri.push_str("/lights");
+    let get = client.get(uri.parse()?).and_then(|res| {
+        res.body().concat2()
+    });
+    let got = core.run(get).unwrap();
+    let v: HashMap<String, Light> = serde_json::from_slice(&got).unwrap();
+    Ok(v)
+}
+
+pub fn sleep(db: DB) -> Result<String, hyper::Error> {
+    let v = get_light_map(&db).unwrap();
+    println!("{}", v.get("1").unwrap().name);
+    Ok(String::from("Goodnight!"))
 }
 
 pub fn get_str_line(line: &str) -> String {

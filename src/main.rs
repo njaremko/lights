@@ -37,10 +37,14 @@ fn main() {
         .subcommand(
             SubCommand::with_name("init")
             .about("Pair with Hue Bridge"))
+        .subcommand(
+            SubCommand::with_name("sleep")
+            .about("Turn all lights off"))
         .get_matches();
 
     let output = match matches.subcommand_name() {
         Some("init") => pair_hue(&mut db),
+        Some("sleep") => sleep(db),
         _ => return,
     };
 

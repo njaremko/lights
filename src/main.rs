@@ -23,15 +23,15 @@ fn main() {
     let state = State::new();
 
     let matches = App::new("lights")
-        .version("1.0")
+        .version("0.1.0")
         .author("Nathan J. <njaremko@gmail.com>")
         .about("Home Lighting Controller")
         .subcommand(SubCommand::with_name("init").about("Pair with Hue Bridge"))
         .subcommand(SubCommand::with_name("sleep").about("Turn all lights off"))
-        .subcommand(SubCommand::with_name("list").about("Lists all groups"))
+        .subcommand(SubCommand::with_name("list").about("Lists all lights"))
         .subcommand(
             SubCommand::with_name("group")
-                .about("Lists all groups")
+                .about("Perform operations on groups")
                 .subcommand(SubCommand::with_name("list").about("Lists all groups"))
                 .subcommand(
                     SubCommand::with_name("on").about("Turn group on").arg(

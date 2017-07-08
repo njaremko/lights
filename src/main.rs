@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 
 extern crate clap;
@@ -45,16 +46,24 @@ fn main() {
         .subcommand(
             SubCommand::with_name("on")
             .about("Turn light on")
-        .arg(Arg::with_name("INPUT")
-             .help("Sets the input file to use")
-             .required(true)
-             .index(1)))
+            .arg(Arg::with_name("INPUT")
+                 .help("Sets the input file to use")
+                 .required(true)
+                 .index(1)))
+        .subcommand(
+            SubCommand::with_name("off")
+            .about("Turn light off")
+            .arg(Arg::with_name("INPUT")
+                 .help("Sets the input file to use")
+                 .required(true)
+                 .index(1)))
         .get_matches();
 
     let output = match matches.subcommand_name() {
-        Some("init") => pair_hue(&mut db),
+        Some("init") => auto_pair_hue(&mut db),
         Some("sleep") => sleep(db),
         Some("on") => light_on(db, matches.subcommand_matches("on").unwrap().value_of("INPUT").unwrap()),
+        Some("off") => light_off(db, matches.subcommand_matches("off").unwrap().value_of("INPUT").unwrap()),
         _ => return,
     };
 

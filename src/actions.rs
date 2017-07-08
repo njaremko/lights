@@ -10,11 +10,33 @@ use std::path::Path;
 use structs::*;
 use tokio_core::reactor::Core;
 
+pub fn auto_pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
+    if db.ip.is_empty() {
+        let mut core = Core::new()?;
+        let client = Client::new(&core.handle());
+        let uri = String::from("https://www.meethue.com/api/nupnp");
+        let get = client.get(uri.parse()?).and_then(|res| {
+            res.body().concat2()
+        });
+        let got = core.run(get).unwrap();
+        let v: Value = serde_json::from_slice(&got).unwrap();    
+        if  v["internalipaddress"] != Value::Null {
+            db.ip = String::from(v["internalipaddress"].as_str().unwrap());
+        }
+        save_db(db);
+    }
+    pair_hue(db)
+}
+
 pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
     let mut output = String::new();
 
     let ip: String = match db.ip.is_empty() {
-        true => get_str_line("Enter Hue Bridge IP: "),
+        true => {
+            let temp = get_str_line("Enter Hue Bridge IP: ");
+            save_db(db);
+            temp
+        },
         false  => db.ip.clone(),
     };
 
@@ -38,11 +60,10 @@ pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
         });
         let posted = core.run(work).unwrap();
         let v: Value = serde_json::from_slice(&posted).unwrap();    
-        
+
         if v[0]["error"] != Value::Null {
             db.ip = ip;
             output = String::from("Press the pairing button on Hue Bridge and run init again...");
-            save_db(db);
         } else if v[0]["success"]["username"] != Value::Null { 
             db.ip = ip;
             db.username = String::from(v[0]["success"]["username"].as_str().unwrap());
@@ -71,8 +92,9 @@ fn get_light_map(db: &DB) -> Result<HashMap<String, Light>, hyper::Error> {
     Ok(v)
 }
 
-fn toggle_light(db: DB, id: &str, on: bool) {
+fn toggle_light(db: &DB, id: &str, on: bool) -> Result<(), hyper::Error> {
     let state = json!({"on": on});
+    let json = Value::to_string(&state);
     let mut core = Core::new()?;
     let client = Client::new(&core.handle());
     let mut uri: String = String::from("http://");
@@ -84,12 +106,13 @@ fn toggle_light(db: DB, id: &str, on: bool) {
     uri.push_str("/state");
     let mut request = Request::new(Method::Put, uri.parse().unwrap());
     request.headers_mut().set(ContentType::json());
-    request.headers_mut().set(ContentLength(state.len() as u64));
-    request.set_body(state);
+    request.headers_mut().set(ContentLength(json.len() as u64));
+    request.set_body(json);
     let work = client.request(request).and_then(|res| {
         res.body().concat2()
     });
     core.run(work).unwrap();
+    Ok(())
 }
 
 pub fn light_on(db: DB, search: &str) -> Result<String, hyper::Error> {
@@ -98,7 +121,10 @@ pub fn light_on(db: DB, search: &str) -> Result<String, hyper::Error> {
 
     for (light_num, light) in &v {
         if re.is_match(&light.name) {
-            toggle_light(db, light_num, true); 
+            match toggle_light(&db, light_num, true) {
+                Ok(_) => (),
+                Err(err) => println!("{}", err),
+            }
         }
     }
     Ok(String::from("Turning matches on!"))
@@ -110,36 +136,24 @@ pub fn light_off(db: DB, search: &str) -> Result<String, hyper::Error> {
 
     for (light_num, light) in &v {
         if re.is_match(&light.name) {
-            toggle_light(db, light_num, false); 
+            match toggle_light(&db, light_num, false) {
+                Ok(_) => (),
+                Err(err) => println!("{}", err),
+            }
         }
     }
     Ok(String::from("Turning matches off!"))
 }
 
 pub fn sleep(db: DB) -> Result<String, hyper::Error> {
-    let mut core = Core::new()?;
-    let client = Client::new(&core.handle());
-    let mut uri: String = String::from("http://");
-    uri.push_str(&db.ip);
-    uri.push_str("/api/");
-    uri.push_str(&db.username);
-    uri.push_str("/lights/");
-    let json = r#"{"on":false}"#; 
 
     let v = get_light_map(&db).unwrap();
 
     for (light_num, _) in &v {
-        let mut light_uri = uri.clone();
-        light_uri.push_str(&light_num);
-        light_uri.push_str("/state");
-        let mut request = Request::new(Method::Put, light_uri.parse().unwrap());
-        request.headers_mut().set(ContentType::json());
-        request.headers_mut().set(ContentLength(json.len() as u64));
-        request.set_body(json);
-        let work = client.request(request).and_then(|res| {
-            res.body().concat2()
-        });
-        core.run(work).unwrap();
+        match toggle_light(&db, light_num, false) {
+            Ok(_) => (),
+            Err(err) => println!("{}", err),
+        }
     }
     Ok(String::from("Goodnight!"))
 }

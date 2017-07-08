@@ -5,9 +5,10 @@ authors = ["njaremko <njaremko@gmail.com>"]
 
 [dependencies]
 clap = "2.25.0"
+futures = "0.1.14"
+hyper = "0.11.1"
+regex = "0.2"
 serde = "1.0.9"
 serde_derive = "1.0.9"
 serde_json = "1.0.2"
-hyper = "0.11.1"
-futures = "0.1.14"
 tokio-core = "0.1.8"

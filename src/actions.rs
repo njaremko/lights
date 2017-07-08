@@ -1,13 +1,14 @@
 use futures::{Future, Stream};
 use hyper::header::{ContentLength, ContentType};
 use hyper::{self, Client, Request, Method};
+use regex::Regex;
 use serde_json::{self, Value};
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::{stdin, stdout, Write};
 use std::path::Path;
 use structs::*;
 use tokio_core::reactor::Core;
-use std::collections::HashMap;
 
 pub fn pair_hue(db: &mut DB) -> Result<String, hyper::Error> {
     let mut output = String::new();
@@ -70,9 +71,76 @@ fn get_light_map(db: &DB) -> Result<HashMap<String, Light>, hyper::Error> {
     Ok(v)
 }
 
-pub fn sleep(db: DB) -> Result<String, hyper::Error> {
+fn toggle_light(db: DB, id: &str, on: bool) {
+    let state = json!({"on": on});
+    let mut core = Core::new()?;
+    let client = Client::new(&core.handle());
+    let mut uri: String = String::from("http://");
+    uri.push_str(&db.ip);
+    uri.push_str("/api/");
+    uri.push_str(&db.username);
+    uri.push_str("/lights/");
+    uri.push_str(id);
+    uri.push_str("/state");
+    let mut request = Request::new(Method::Put, uri.parse().unwrap());
+    request.headers_mut().set(ContentType::json());
+    request.headers_mut().set(ContentLength(state.len() as u64));
+    request.set_body(state);
+    let work = client.request(request).and_then(|res| {
+        res.body().concat2()
+    });
+    core.run(work).unwrap();
+}
+
+pub fn light_on(db: DB, search: &str) -> Result<String, hyper::Error> {
+    let re = Regex::new(&search).unwrap();
     let v = get_light_map(&db).unwrap();
-    println!("{}", v.get("1").unwrap().name);
+
+    for (light_num, light) in &v {
+        if re.is_match(&light.name) {
+            toggle_light(db, light_num, true); 
+        }
+    }
+    Ok(String::from("Turning matches on!"))
+}
+
+pub fn light_off(db: DB, search: &str) -> Result<String, hyper::Error> {
+    let re = Regex::new(&search).unwrap();
+    let v = get_light_map(&db).unwrap();
+
+    for (light_num, light) in &v {
+        if re.is_match(&light.name) {
+            toggle_light(db, light_num, false); 
+        }
+    }
+    Ok(String::from("Turning matches off!"))
+}
+
+pub fn sleep(db: DB) -> Result<String, hyper::Error> {
+    let mut core = Core::new()?;
+    let client = Client::new(&core.handle());
+    let mut uri: String = String::from("http://");
+    uri.push_str(&db.ip);
+    uri.push_str("/api/");
+    uri.push_str(&db.username);
+    uri.push_str("/lights/");
+    let json = r#"{"on":false}"#; 
+
+    let v = get_light_map(&db).unwrap();
+
+    for (light_num, _) in &v {
+        let mut light_uri = uri.clone();
+        light_uri.push_str(&light_num);
+        light_uri.push_str("/state");
+        let mut request = Request::new(Method::Put, light_uri.parse().unwrap());
+        request.headers_mut().set(ContentType::json());
+        request.headers_mut().set(ContentLength(json.len() as u64));
+        request.set_body(json);
+        let work = client.request(request).and_then(|res| {
+            res.body().concat2()
+        });
+        core.run(work).unwrap();
+    }
     Ok(String::from("Goodnight!"))
 }
 

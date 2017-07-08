@@ -2,9 +2,11 @@
 extern crate serde_derive;
 extern crate serde;
 extern crate serde_json;
+
 extern crate clap;
 extern crate futures;
 extern crate hyper;
+extern crate regex;
 extern crate tokio_core;
 
 mod actions;
@@ -16,7 +18,7 @@ use std::path::Path;
 use structs::*;
 use actions::*;
 
-use clap::{App, /*Arg,*/ SubCommand};
+use clap::{App, Arg, SubCommand};
 
 fn main() {
     let path = Path::new(DB_PATH_STRING);
@@ -40,11 +42,19 @@ fn main() {
         .subcommand(
             SubCommand::with_name("sleep")
             .about("Turn all lights off"))
+        .subcommand(
+            SubCommand::with_name("on")
+            .about("Turn light on")
+        .arg(Arg::with_name("INPUT")
+             .help("Sets the input file to use")
+             .required(true)
+             .index(1)))
         .get_matches();
 
     let output = match matches.subcommand_name() {
         Some("init") => pair_hue(&mut db),
         Some("sleep") => sleep(db),
+        Some("on") => light_on(db, matches.subcommand_matches("on").unwrap().value_of("INPUT").unwrap()),
         _ => return,
     };
 

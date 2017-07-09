@@ -9,6 +9,7 @@ extern crate serde_derive;
 extern crate serde_json;
 extern crate tokio_core;
 
+mod colors;
 mod group_actions;
 mod light_actions;
 mod structs;
@@ -35,7 +36,7 @@ fn main() {
                 .subcommand(SubCommand::with_name("list").about("Lists all groups"))
                 .subcommand(
                     SubCommand::with_name("on").about("Turn group on").arg(
-                        Arg::with_name("INPUT")
+                        Arg::with_name("REGEX")
                             .help("Sets the input file to use")
                             .required(true)
                             .index(1),
@@ -43,16 +44,26 @@ fn main() {
                 )
                 .subcommand(
                     SubCommand::with_name("off").about("Turn group off").arg(
-                        Arg::with_name("INPUT")
+                        Arg::with_name("REGEX")
                             .help("Sets the input file to use")
                             .required(true)
                             .index(1),
                     ),
+                )
+                .subcommand(
+                    SubCommand::with_name("color")
+                        .about("Change group color")
+                        .arg(
+                            Arg::with_name("REGEX")
+                                .help("Sets the input file to use")
+                                .required(true)
+                                .index(1),
+                        ),
                 ),
         )
         .subcommand(
             SubCommand::with_name("on").about("Turn light on").arg(
-                Arg::with_name("INPUT")
+                Arg::with_name("REGEX")
                     .help("Sets the input file to use")
                     .required(true)
                     .index(1),
@@ -60,7 +71,7 @@ fn main() {
         )
         .subcommand(
             SubCommand::with_name("off").about("Turn light off").arg(
-                Arg::with_name("INPUT")
+                Arg::with_name("REGEX")
                     .help("Sets the input file to use")
                     .required(true)
                     .index(1),
@@ -82,7 +93,7 @@ fn main() {
                         group_matches
                             .subcommand_matches("on")
                             .unwrap()
-                            .value_of("INPUT")
+                            .value_of("REGEX")
                             .unwrap(),
                     )
                 }
@@ -92,9 +103,19 @@ fn main() {
                         group_matches
                             .subcommand_matches("off")
                             .unwrap()
-                            .value_of("INPUT")
+                            .value_of("REGEX")
                             .unwrap(),
                     )
+                }
+                Some("color") => {
+                    group_color(
+                        state,
+                        group_matches
+                        .subcommand_matches("color")
+                        .unwrap()
+                        .value_of("REGEX")
+                        .unwrap(),
+                        )
                 }
                 _ => return,
             }
@@ -103,21 +124,21 @@ fn main() {
             light_on(
                 state,
                 matches
-                    .subcommand_matches("on")
-                    .unwrap()
-                    .value_of("INPUT")
-                    .unwrap(),
-            )
+                .subcommand_matches("on")
+                .unwrap()
+                .value_of("REGEX")
+                .unwrap(),
+                )
         }
         Some("off") => {
             light_off(
                 state,
                 matches
-                    .subcommand_matches("off")
-                    .unwrap()
-                    .value_of("INPUT")
-                    .unwrap(),
-            )
+                .subcommand_matches("off")
+                .unwrap()
+                .value_of("REGEX")
+                .unwrap(),
+                )
         }
         _ => return,
     };

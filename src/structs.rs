@@ -8,7 +8,6 @@ use tokio_core::reactor::Core;
 
 pub static DB_PATH_STRING: &str = "config";
 
-#[derive(Debug)]
 pub struct State {
     pub client: Client<HttpConnector, Body>,
     pub core: Core,
@@ -48,13 +47,13 @@ pub struct LightState {
     pub on: bool,
     pub bri: u8,
     #[serde(default)]
-    pub hue: u32,
+    pub hue: u16,
     #[serde(default)]
     pub sat: u8,
     #[serde(default)]
     pub xy: [f64; 2],
     #[serde(default)]
-    pub ct: u32,
+    pub ct: u16,
     pub alert: String,
     #[serde(default)]
     pub effect: String,
@@ -102,7 +101,7 @@ pub struct GroupAction {
     pub on: bool,
     pub bri: u8,
     #[serde(default)]
-    pub hue: u32,
+    pub hue: u16,
     #[serde(default)]
     pub sat: u8,
     #[serde(default)]
@@ -110,7 +109,7 @@ pub struct GroupAction {
     #[serde(default)]
     pub xy: [f64; 2],
     #[serde(default)]
-    pub ct: u32,
+    pub ct: u16,
     pub alert: String,
     #[serde(default)]
     pub colormode: String,

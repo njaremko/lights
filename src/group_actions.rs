@@ -1,3 +1,4 @@
+use colors::*;
 use futures::{Future, Stream};
 use hyper::header::{ContentLength, ContentType};
 use hyper::{self, Request, Method};
@@ -52,9 +53,9 @@ pub fn group_on(mut state: State, search: &str) -> Result<String, hyper::Error> 
     let re = Regex::new(&search).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
-    for (light_num, light) in &v {
-        if re.is_match(&light.name) {
-            match toggle_group(&mut state, light_num, true) {
+    for (group_num, group) in &v {
+        if re.is_match(&group.name) {
+            match toggle_group(&mut state, group_num, true) {
                 Err(err) => println!("{}", err),
                 _ => (),
             }
@@ -67,13 +68,49 @@ pub fn group_off(mut state: State, search: &str) -> Result<String, hyper::Error>
     let re = Regex::new(&search).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
-    for (light_num, light) in &v {
-        if re.is_match(&light.name) {
-            match toggle_group(&mut state, light_num, false) {
+    for (group_num, group) in &v {
+        if re.is_match(&group.name) {
+            match toggle_group(&mut state, group_num, false) {
                 Err(err) => println!("{}", err),
                 _ => (),
             }
         }
     }
     Ok(String::from("Turning matches off!"))
+}
+
+pub fn set_group_color(state: &mut State, id: &str, color: Color) -> Result<(), hyper::Error> {
+    let json_state = json!({ "hue": color.0, "sat": color.1 });
+    let json = Value::to_string(&json_state);
+    let uri: String = format!(
+        "http://{}/api/{}/groups/{}/action",
+        &state.db.ip,
+        &state.db.username,
+        id
+        );
+    let mut request = Request::new(Method::Put, uri.parse()?);
+    request.headers_mut().set(ContentType::json());
+    request.headers_mut().set(ContentLength(json.len() as u64));
+    request.set_body(json);
+    let work = state
+        .client
+        .request(request)
+        .and_then(|res| res.body().concat2());
+    state.core.run(work)?;
+    Ok(())
+}
+
+pub fn group_color(mut state: State, search: &str) -> Result<String, hyper::Error> {
+    let re = Regex::new(&search).expect("Failed to parse regex");
+    let v = get_group_map(&mut state)?;
+
+    for (group_num, group) in &v {
+        if re.is_match(&group.name) {
+            match set_group_color(&mut state, group_num, cyan) {
+                Err(err) => println!("{}", err),
+                _ => (),
+            }
+        }
+    }
+    Ok(String::from("Changing matches to color!"))
 }

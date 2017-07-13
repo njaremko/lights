@@ -1,7 +1,18 @@
-pub struct Color(pub u16, pub u8);
+#[allow(dead_code)]
+pub enum Color {
+    BLUE,
+    CYAN,
+    GREEN,
+    RED
+}
 
-pub const blue: Color = Color(46920, 254);
-pub const cyan: Color = Color(32767, 254);
-pub const green: Color = Color(25500, 254);
-pub const red: Color = Color(0, 254);
-
+impl Color {
+    pub fn value(&self) -> (u16, u8) {
+        match *self {
+            Color::BLUE => (46920, 254),
+            Color::CYAN => (32767, 254),
+            Color::GREEN => (25500, 254),
+            Color::RED => (0, 254),
+        }
+    }
+}

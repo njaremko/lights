@@ -1,24 +1,24 @@
 use colors::*;
-use futures::{Future, Stream};
-use hyper::header::{ContentLength, ContentType};
-use hyper::{self, Request, Method};
 use regex::Regex;
-use serde_json::{self, Value};
+use reqwest;
+use serde_json;
 use std::collections::HashMap;
+use std::io::Read;
 use structs::*;
 
-fn get_group_map(state: &mut State) -> Result<HashMap<String, Group>, hyper::Error> {
+fn get_group_map(state: &mut State) -> Result<HashMap<String, Group>, reqwest::Error> {
     let uri = format!("http://{}/api/{}/groups", &state.db.ip, &state.db.username);
-    let get = state
-        .client
-        .get(uri.parse()?)
-        .and_then(|res| res.body().concat2());
-    let got = state.core.run(get)?;
-    let v: HashMap<String, Group> = serde_json::from_slice(&got).unwrap();
+    let mut resp = reqwest::get(&uri)?;
+    let mut content = String::new();
+    match resp.read_to_string(&mut content) {
+        Err(err) => println!("{}", err),
+        _ => (),
+    }
+    let v: HashMap<String, Group> = serde_json::from_str(&content).unwrap();
     Ok(v)
 }
 
-pub fn list_groups(mut state: State) -> Result<String, hyper::Error> {
+pub fn list_groups(mut state: State) -> Result<String, reqwest::Error> {
     let mut result = String::new();
     let groups = get_group_map(&mut state)?;
     for (_, group) in groups {
@@ -28,28 +28,21 @@ pub fn list_groups(mut state: State) -> Result<String, hyper::Error> {
     Ok(result)
 }
 
-fn toggle_group(state: &mut State, id: &str, on: bool) -> Result<(), hyper::Error> {
-    let json_state = json!({ "on": on });
-    let json = Value::to_string(&json_state);
+fn toggle_group(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Error> {
+    let json = json!({ "on": on });
     let uri: String = format!(
         "http://{}/api/{}/groups/{}/action",
         &state.db.ip,
         &state.db.username,
         id
-    );
-    let mut request = Request::new(Method::Put, uri.parse()?);
-    request.headers_mut().set(ContentType::json());
-    request.headers_mut().set(ContentLength(json.len() as u64));
-    request.set_body(json);
-    let work = state
-        .client
-        .request(request)
-        .and_then(|res| res.body().concat2());
-    state.core.run(work)?;
+        );
+    state.client.put(&uri)?
+        .json(&json)?
+        .send()?;
     Ok(())
 }
 
-pub fn group_on(mut state: State, search: &str) -> Result<String, hyper::Error> {
+pub fn group_on(mut state: State, search: &str) -> Result<String, reqwest::Error> {
     let re = Regex::new(&search).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
@@ -64,7 +57,7 @@ pub fn group_on(mut state: State, search: &str) -> Result<String, hyper::Error> 
     Ok(String::from("Turning matches on!"))
 }
 
-pub fn group_off(mut state: State, search: &str) -> Result<String, hyper::Error> {
+pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Error> {
     let re = Regex::new(&search).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
@@ -79,34 +72,27 @@ pub fn group_off(mut state: State, search: &str) -> Result<String, hyper::Error>
     Ok(String::from("Turning matches off!"))
 }
 
-pub fn set_group_color(state: &mut State, id: &str, color: Color) -> Result<(), hyper::Error> {
-    let json_state = json!({ "hue": color.0, "sat": color.1 });
-    let json = Value::to_string(&json_state);
+pub fn set_group_color(state: &mut State, id: &str, color: Color) -> Result<(), reqwest::Error> {
+    let json = json!({ "hue": color.value().0, "sat": color.value().1 });
     let uri: String = format!(
         "http://{}/api/{}/groups/{}/action",
         &state.db.ip,
         &state.db.username,
         id
         );
-    let mut request = Request::new(Method::Put, uri.parse()?);
-    request.headers_mut().set(ContentType::json());
-    request.headers_mut().set(ContentLength(json.len() as u64));
-    request.set_body(json);
-    let work = state
-        .client
-        .request(request)
-        .and_then(|res| res.body().concat2());
-    state.core.run(work)?;
+    state.client.put(&uri)?
+        .json(&json)?
+        .send()?;
     Ok(())
 }
 
-pub fn group_color(mut state: State, search: &str) -> Result<String, hyper::Error> {
+pub fn group_color(mut state: State, search: &str) -> Result<String, reqwest::Error> {
     let re = Regex::new(&search).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
         if re.is_match(&group.name) {
-            match set_group_color(&mut state, group_num, cyan) {
+            match set_group_color(&mut state, group_num, Color::CYAN) {
                 Err(err) => println!("{}", err),
                 _ => (),
             }

@@ -1,26 +1,21 @@
-use hyper::client::HttpConnector;
-use hyper::{Body, Client};
+use reqwest;
 use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::Path;
-use tokio_core::reactor::Core;
 
 pub static DB_PATH_STRING: &str = "config";
 
 pub struct State {
-    pub client: Client<HttpConnector, Body>,
-    pub core: Core,
+    pub client: reqwest::Client,
     pub db: DB,
 }
 
 impl State {
     pub fn new() -> State {
         let path = Path::new(DB_PATH_STRING);
-        let core = Core::new().unwrap();
         State {
-            client: Client::new(&core.handle()),
-            core: core,
+            client: reqwest::Client::new().unwrap(),
             db: match path.exists() {
                 true => {
                     let mut s = String::new();

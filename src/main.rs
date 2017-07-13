@@ -1,13 +1,11 @@
 extern crate clap;
-extern crate futures;
-extern crate hyper;
 extern crate regex;
+extern crate reqwest;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 #[macro_use]
 extern crate serde_json;
-extern crate tokio_core;
 
 mod colors;
 mod group_actions;

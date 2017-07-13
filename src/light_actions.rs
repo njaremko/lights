@@ -144,6 +144,21 @@ pub fn light_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
     Ok(String::from("Turning matches off!"))
 }
 
+pub fn light_off_except(mut state: State, search: &str) -> Result<String, reqwest::Error> {
+    let re = Regex::new(&search).expect("Failed to parse regex");
+    let v = get_light_map(&mut state)?;
+
+    for (light_num, light) in &v {
+        if !re.is_match(&light.name) {
+            match toggle_light(&mut state, light_num, false) {
+                Err(err) => println!("{}", err),
+                _ => (),
+            }
+        }
+    }
+    Ok(String::from("Turning matches off!"))
+}
+
 pub fn sleep(mut state: State) -> Result<String, reqwest::Error> {
     let v = get_light_map(&mut state)?;
     for (light_num, _) in &v {

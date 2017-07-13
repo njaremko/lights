@@ -8,7 +8,9 @@ pub enum Color {
     Blue,
     Cyan,
     Green,
+    Orange,
     Red,
+    Yellow,
 }
 
 impl Color {
@@ -17,12 +19,14 @@ impl Color {
             Blue => (46920, 254),
             Cyan => (32767, 254),
             Green => (25500, 254),
+            Orange => (0, 152),
             Red => (0, 254),
+            Yellow => (14155, 254),
         }
     }
 
     pub fn iterator() -> Iter<'static, Color> {
-        static COLORS: [Color; 4] = [Blue, Cyan, Green, Red];
+        static COLORS: [Color; 6] = [Blue, Cyan, Green, Orange, Red, Yellow];
         COLORS.into_iter()
     }
 }

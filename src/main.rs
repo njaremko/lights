@@ -41,12 +41,20 @@ fn main() {
                     ),
                 )
                 .subcommand(
-                    SubCommand::with_name("off").about("Turn group off").arg(
-                        Arg::with_name("REGEX")
-                            .help("Sets the input file to use")
-                            .required(true)
-                            .index(1),
-                    ),
+                    SubCommand::with_name("off")
+                        .about("Turn group off")
+                        .arg(
+                            Arg::with_name("REGEX")
+                                .help("Sets the input file to use")
+                                .required(true)
+                                .index(1),
+                        )
+                        .arg(
+                            Arg::with_name("except")
+                                .short("e")
+                                .long("except")
+                                .help("Turns off all lights except matches"),
+                        ),
                 )
                 .subcommand(
                     SubCommand::with_name("color")
@@ -74,12 +82,20 @@ fn main() {
             ),
         )
         .subcommand(
-            SubCommand::with_name("off").about("Turn light off").arg(
-                Arg::with_name("REGEX")
-                    .help("Sets the input file to use")
-                    .required(true)
-                    .index(1),
-            ),
+            SubCommand::with_name("off")
+                .about("Turn light off")
+                .arg(
+                    Arg::with_name("REGEX")
+                        .help("Sets the input file to use")
+                        .required(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("except")
+                        .short("e")
+                        .long("except")
+                        .help("Turns off all lights except matches"),
+                ),
         )
         .get_matches();
 
@@ -102,14 +118,12 @@ fn main() {
                     )
                 }
                 Some("off") => {
-                    group_off(
-                        state,
-                        group_matches
-                            .subcommand_matches("off")
-                            .unwrap()
-                            .value_of("REGEX")
-                            .unwrap(),
-                    )
+                    let off_matches = group_matches.subcommand_matches("off").unwrap();
+                    if off_matches.occurrences_of("except") > 0 {
+                        group_off_except(state, off_matches.value_of("REGEX").unwrap())
+                    } else {
+                        group_off(state, off_matches.value_of("REGEX").unwrap())
+                    }
                 }
                 Some("color") => {
                     let color_matches = group_matches.subcommand_matches("color").unwrap();
@@ -133,14 +147,12 @@ fn main() {
             )
         }
         Some("off") => {
-            light_off(
-                state,
-                matches
-                    .subcommand_matches("off")
-                    .unwrap()
-                    .value_of("REGEX")
-                    .unwrap(),
-            )
+            let off_matches = matches.subcommand_matches("off").unwrap();
+            if off_matches.occurrences_of("except") > 0 {
+                light_off_except(state, off_matches.value_of("REGEX").unwrap())
+            } else {
+                light_off(state, off_matches.value_of("REGEX").unwrap())
+            }
         }
         _ => return,
     };

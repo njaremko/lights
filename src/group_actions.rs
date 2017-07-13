@@ -35,10 +35,8 @@ fn toggle_group(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
         &state.db.ip,
         &state.db.username,
         id
-        );
-    state.client.put(&uri)?
-        .json(&json)?
-        .send()?;
+    );
+    state.client.put(&uri)?.json(&json)?.send()?;
     Ok(())
 }
 
@@ -72,7 +70,7 @@ pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
     Ok(String::from("Turning matches off!"))
 }
 
-pub fn set_group_color(state: &mut State, id: &str, color: Color) -> Result<(), reqwest::Error> {
+pub fn set_group_color(state: &mut State, id: &str, color: &Color) -> Result<(), reqwest::Error> {
     let json = json!({ "hue": color.value().0, "sat": color.value().1 });
     let uri: String = format!(
         "http://{}/api/{}/groups/{}/action",
@@ -80,19 +78,27 @@ pub fn set_group_color(state: &mut State, id: &str, color: Color) -> Result<(), 
         &state.db.username,
         id
         );
-    state.client.put(&uri)?
-        .json(&json)?
-        .send()?;
+    state.client.put(&uri)?.json(&json)?.send()?;
     Ok(())
 }
 
-pub fn group_color(mut state: State, search: &str) -> Result<String, reqwest::Error> {
+pub fn group_color(
+    mut state: State,
+    search: &str,
+    search_color: &str,
+) -> Result<String, reqwest::Error> {
     let re = Regex::new(&search).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
+    let mut set_color = &Color::Cyan;
+    for color in Color::iterator() {
+        if String::from(search_color).to_lowercase() == color.to_string().to_lowercase() {
+            set_color = color;
+        }
+    }
 
     for (group_num, group) in &v {
         if re.is_match(&group.name) {
-            match set_group_color(&mut state, group_num, Color::CYAN) {
+            match set_group_color(&mut state, group_num, set_color) {
                 Err(err) => println!("{}", err),
                 _ => (),
             }

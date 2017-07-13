@@ -53,9 +53,15 @@ fn main() {
                         .about("Change group color")
                         .arg(
                             Arg::with_name("REGEX")
-                                .help("Sets the input file to use")
+                                .help("Sets regex used to find matches")
                                 .required(true)
                                 .index(1),
+                        )
+                        .arg(
+                            Arg::with_name("COLOR")
+                                .help("Sets the color")
+                                .required(true)
+                                .index(2),
                         ),
                 ),
         )
@@ -106,14 +112,12 @@ fn main() {
                     )
                 }
                 Some("color") => {
+                    let color_matches = group_matches.subcommand_matches("color").unwrap();
                     group_color(
                         state,
-                        group_matches
-                        .subcommand_matches("color")
-                        .unwrap()
-                        .value_of("REGEX")
-                        .unwrap(),
-                        )
+                        color_matches.value_of("REGEX").unwrap(),
+                        color_matches.value_of("COLOR").unwrap(),
+                    )
                 }
                 _ => return,
             }
@@ -122,21 +126,21 @@ fn main() {
             light_on(
                 state,
                 matches
-                .subcommand_matches("on")
-                .unwrap()
-                .value_of("REGEX")
-                .unwrap(),
-                )
+                    .subcommand_matches("on")
+                    .unwrap()
+                    .value_of("REGEX")
+                    .unwrap(),
+            )
         }
         Some("off") => {
             light_off(
                 state,
                 matches
-                .subcommand_matches("off")
-                .unwrap()
-                .value_of("REGEX")
-                .unwrap(),
-                )
+                    .subcommand_matches("off")
+                    .unwrap()
+                    .value_of("REGEX")
+                    .unwrap(),
+            )
         }
         _ => return,
     };

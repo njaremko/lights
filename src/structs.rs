@@ -1,10 +1,8 @@
 use reqwest;
+use utils::get_config_path;
 use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
-use std::path::Path;
-
-pub static DB_PATH_STRING: &str = "config";
 
 pub struct State {
     pub client: reqwest::Client,
@@ -13,7 +11,7 @@ pub struct State {
 
 impl State {
     pub fn new() -> State {
-        let path = Path::new(DB_PATH_STRING);
+        let path = get_config_path();
         State {
             client: reqwest::Client::new().unwrap(),
             db: match path.exists() {
@@ -22,9 +20,12 @@ impl State {
                     File::open(&path).unwrap().read_to_string(&mut s).unwrap();
                     serde_json::from_str(&s).unwrap()
                 }
-                false => DB {
+                false => {
+                    println!("No file found");
+                    DB {
                     ip: String::new(),
                     username: String::new(),
+                }
                 },
             },
         }

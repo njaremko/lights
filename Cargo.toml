@@ -2,6 +2,8 @@
 name = "lights"
 version = "0.1.0"
 authors = ["njaremko <njaremko@gmail.com>"]
+description = "A command line Hue light controller"
+license = "MIT"
 
 [dependencies]
 clap = "2.25.0"

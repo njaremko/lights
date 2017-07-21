@@ -1,7 +1,8 @@
 use serde_json;
 use std::fs::File;
 use std::io::{self, stdin, stdout, Write};
-use std::path::Path;
+use std::path::PathBuf;
+use std::env;
 use structs::*;
 
 pub fn get_str_line(line: &str) -> Result<String, io::Error> {
@@ -13,9 +14,14 @@ pub fn get_str_line(line: &str) -> Result<String, io::Error> {
 }
 
 pub fn save_db(db: &DB) -> Result<(), io::Error> {
-    let path = Path::new(DB_PATH_STRING);
     let serialized = serde_json::to_string(&db)?;
-    let mut file = File::create(&path)?;
+    let mut file = File::create(get_config_path())?;
     file.write_all(serialized.as_bytes())?;
     Ok(())
+}
+
+pub fn get_config_path() -> PathBuf {
+    let mut path = env::home_dir().unwrap();
+    path.push(".light_config");
+    path
 }

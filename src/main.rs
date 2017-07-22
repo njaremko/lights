@@ -17,6 +17,7 @@ use clap::{App, Arg, SubCommand};
 use group_actions::*;
 use light_actions::*;
 use structs::*;
+use utils::*;
 
 fn main() {
     let state = State::new();

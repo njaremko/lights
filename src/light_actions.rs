@@ -40,9 +40,8 @@ fn toggle_light(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
 }
 
 pub fn light_on(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_light_map(&mut state)?;
-
     for (light_num, light) in &v {
         if re.is_match(&light.name) {
             match toggle_light(&mut state, light_num, true) {
@@ -55,7 +54,7 @@ pub fn light_on(mut state: State, search: &str) -> Result<String, reqwest::Error
 }
 
 pub fn light_off(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_light_map(&mut state)?;
 
     for (light_num, light) in &v {
@@ -70,7 +69,7 @@ pub fn light_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
 }
 
 pub fn light_off_except(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_light_map(&mut state)?;
 
     for (light_num, light) in &v {
@@ -79,6 +78,17 @@ pub fn light_off_except(mut state: State, search: &str) -> Result<String, reqwes
                 Err(err) => println!("{}", err),
                 _ => (),
             }
+        }
+    }
+    Ok(String::from("Turning matches off!"))
+}
+
+pub fn all_lights_off(mut state: State) -> Result<String, reqwest::Error> {
+    let v = get_light_map(&mut state)?;
+
+    for (light_num, _) in &v {
+        if let Err(err) = toggle_light(&mut state, light_num, false) {
+            println!("{}", err);
         }
     }
     Ok(String::from("Turning matches off!"))

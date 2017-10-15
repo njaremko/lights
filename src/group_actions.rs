@@ -41,7 +41,7 @@ fn toggle_group(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
 }
 
 pub fn group_on(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
@@ -56,7 +56,7 @@ pub fn group_on(mut state: State, search: &str) -> Result<String, reqwest::Error
 }
 
 pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
@@ -71,7 +71,7 @@ pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
 }
 
 pub fn group_off_except(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
@@ -102,7 +102,7 @@ pub fn group_color(
     search: &str,
     search_color: &str,
 ) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&search).expect("Failed to parse regex");
+    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
     let v = get_group_map(&mut state)?;
     let mut set_color = &Color::Cyan;
     for color in Color::iterator() {

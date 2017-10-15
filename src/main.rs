@@ -88,7 +88,6 @@ fn main() {
                 .arg(
                     Arg::with_name("REGEX")
                         .help("Sets the input file to use")
-                        .required(true)
                         .index(1),
                 )
                 .arg(
@@ -149,10 +148,14 @@ fn main() {
         }
         Some("off") => {
             let off_matches = matches.subcommand_matches("off").unwrap();
-            if off_matches.occurrences_of("except") > 0 {
-                light_off_except(state, off_matches.value_of("REGEX").unwrap())
+            if off_matches.occurrences_of("REGEX") > 0 {
+                if off_matches.occurrences_of("except") > 0 {
+                    light_off_except(state, off_matches.value_of("REGEX").unwrap())
+                } else {
+                    light_off(state, off_matches.value_of("REGEX").unwrap())
+                }
             } else {
-                light_off(state, off_matches.value_of("REGEX").unwrap())
+                all_lights_off(state)
             }
         }
         _ => return,

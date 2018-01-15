@@ -31,9 +31,7 @@ fn toggle_light(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
     let json = json!({ "on": on });
     let uri: String = format!(
         "http://{}/api/{}/lights/{}/state",
-        &state.db.ip,
-        &state.db.username,
-        id
+        &state.db.ip, &state.db.username, id
     );
     state.client.put(&uri)?.json(&json)?.send()?;
     Ok(())

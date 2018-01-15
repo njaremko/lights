@@ -84,9 +84,7 @@ pub fn pair_hue(mut state: State) -> Result<String, reqwest::Error> {
         let v: Value = state.client.post(&uri)?.json(&json)?.send()?.json()?;
 
         if v[0]["error"] != Value::Null {
-            String::from(
-                "Press the pairing button on Hue Bridge and run init again...",
-            )
+            String::from("Press the pairing button on Hue Bridge and run init again...")
         } else if v[0]["success"]["username"] != Value::Null {
             state.db.username = match v[0]["success"]["username"].as_str() {
                 Some(val) => String::from(val),

@@ -107,16 +107,14 @@ fn main() {
             let group_matches = matches.subcommand_matches("group").unwrap();
             match group_matches.subcommand_name() {
                 Some("list") => list_groups(state),
-                Some("on") => {
-                    group_on(
-                        state,
-                        group_matches
-                            .subcommand_matches("on")
-                            .unwrap()
-                            .value_of("REGEX")
-                            .unwrap(),
-                    )
-                }
+                Some("on") => group_on(
+                    state,
+                    group_matches
+                        .subcommand_matches("on")
+                        .unwrap()
+                        .value_of("REGEX")
+                        .unwrap(),
+                ),
                 Some("off") => {
                     let off_matches = group_matches.subcommand_matches("off").unwrap();
                     if off_matches.occurrences_of("except") > 0 {
@@ -136,16 +134,14 @@ fn main() {
                 _ => return,
             }
         }
-        Some("on") => {
-            light_on(
-                state,
-                matches
-                    .subcommand_matches("on")
-                    .unwrap()
-                    .value_of("REGEX")
-                    .unwrap(),
-            )
-        }
+        Some("on") => light_on(
+            state,
+            matches
+                .subcommand_matches("on")
+                .unwrap()
+                .value_of("REGEX")
+                .unwrap(),
+        ),
         Some("off") => {
             let off_matches = matches.subcommand_matches("off").unwrap();
             if off_matches.occurrences_of("REGEX") > 0 {

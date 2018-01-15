@@ -32,9 +32,7 @@ fn toggle_group(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
     let json = json!({ "on": on });
     let uri: String = format!(
         "http://{}/api/{}/groups/{}/action",
-        &state.db.ip,
-        &state.db.username,
-        id
+        &state.db.ip, &state.db.username, id
     );
     state.client.put(&uri)?.json(&json)?.send()?;
     Ok(())
@@ -89,10 +87,8 @@ pub fn set_group_color(state: &mut State, id: &str, color: &Color) -> Result<(),
     let json = json!({ "hue": color.value().0, "sat": color.value().1 });
     let uri: String = format!(
         "http://{}/api/{}/groups/{}/action",
-        &state.db.ip,
-        &state.db.username,
-        id
-        );
+        &state.db.ip, &state.db.username, id
+    );
     state.client.put(&uri)?.json(&json)?.send()?;
     Ok(())
 }

@@ -33,9 +33,8 @@ pub fn auto_pair_hue(mut state: State) -> Result<String, reqwest::Error> {
     if state.db.ip.is_empty() {
         let mut resp = reqwest::get("https://www.meethue.com/api/nupnp").unwrap();
         let mut content = String::new();
-        match resp.read_to_string(&mut content) {
-            Err(err) => println!("{}", err),
-            _ => (),
+        if let Err(err) = resp.read_to_string(&mut content) {
+            eprintln!("{}", err);
         }
         let v: Value = serde_json::from_str(&content).unwrap();
         if v[0]["internalipaddress"] != Value::Null {
@@ -47,31 +46,28 @@ pub fn auto_pair_hue(mut state: State) -> Result<String, reqwest::Error> {
         } else {
             println!("Failed to auto-locate Hue bridge...");
         }
-        match save_db(&state.db) {
-            Err(err) => println!("Failed to save db: {}", err),
-            _ => (),
+        if let Err(err) = save_db(&state.db) {
+            eprintln!("Failed to save db: {}", err);
         }
     }
     pair_hue(state)
 }
 
 pub fn pair_hue(mut state: State) -> Result<String, reqwest::Error> {
-    let ip: String = match state.db.ip.is_empty() {
-        true => {
-            let temp = match get_str_line("Enter Hue Bridge IP: ") {
-                Ok(input) => input,
-                Err(err) => {
-                    println!("{}", err);
-                    String::new()
-                }
-            };
-            match save_db(&state.db) {
-                Err(err) => println!("Failed to save db: {}", err),
-                _ => (),
+    let ip: String = if state.db.ip.is_empty() {
+        let temp = match get_str_line("Enter Hue Bridge IP: ") {
+            Ok(input) => input,
+            Err(err) => {
+                println!("{}", err);
+                String::new()
             }
-            temp
+        };
+        if let Err(err) = save_db(&state.db) {
+            eprintln!("Failed to save db: {}", err);
         }
-        false => state.db.ip.clone(),
+        temp
+    } else {
+        state.db.ip.clone()
     };
 
     let output = if !state.db.username.is_empty() {
@@ -90,9 +86,8 @@ pub fn pair_hue(mut state: State) -> Result<String, reqwest::Error> {
                 Some(val) => String::from(val),
                 None => String::new(),
             };
-            match save_db(&state.db) {
-                Err(err) => println!("Failed to save db: {}", err),
-                _ => (),
+            if let Err(err) = save_db(&state.db)  {
+                eprintln!("Failed to save db: {}", err);
             }
             String::from("Pairing Successful!")
         } else {

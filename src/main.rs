@@ -154,7 +154,7 @@ fn main() {
                 all_lights_off(state)
             }
         }
-        _ => return,
+        _ => auto_pair_hue(state),
     };
 
     match output {

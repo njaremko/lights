@@ -10,9 +10,8 @@ fn get_group_map(state: &mut State) -> Result<HashMap<String, Group>, reqwest::E
     let uri = format!("http://{}/api/{}/groups", &state.db.ip, &state.db.username);
     let mut resp = reqwest::get(&uri)?;
     let mut content = String::new();
-    match resp.read_to_string(&mut content) {
-        Err(err) => println!("{}", err),
-        _ => (),
+    if let Err(err) = resp.read_to_string(&mut content) {
+        eprintln!("{}", err);
     }
     let v: HashMap<String, Group> = serde_json::from_str(&content).unwrap();
     Ok(v)
@@ -44,9 +43,8 @@ pub fn group_on(mut state: State, search: &str) -> Result<String, reqwest::Error
 
     for (group_num, group) in &v {
         if re.is_match(&group.name) {
-            match toggle_group(&mut state, group_num, true) {
-                Err(err) => println!("{}", err),
-                _ => (),
+            if let Err(err) = toggle_group(&mut state, group_num, true) {
+                eprintln!("{}", err);
             }
         }
     }
@@ -59,9 +57,8 @@ pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
 
     for (group_num, group) in &v {
         if re.is_match(&group.name) {
-            match toggle_group(&mut state, group_num, false) {
-                Err(err) => println!("{}", err),
-                _ => (),
+            if let Err(err) = toggle_group(&mut state, group_num, false) {
+                eprintln!("{}", err);
             }
         }
     }
@@ -74,9 +71,8 @@ pub fn group_off_except(mut state: State, search: &str) -> Result<String, reqwes
 
     for (group_num, group) in &v {
         if !re.is_match(&group.name) {
-            match toggle_group(&mut state, group_num, false) {
-                Err(err) => println!("{}", err),
-                _ => (),
+            if let Err(err) = toggle_group(&mut state, group_num, false) {
+                eprintln!("{}", err);
             }
         }
     }
@@ -109,9 +105,8 @@ pub fn group_color(
 
     for (group_num, group) in &v {
         if re.is_match(&group.name) {
-            match set_group_color(&mut state, group_num, set_color) {
-                Err(err) => println!("{}", err),
-                _ => (),
+            if let Err(err) = set_group_color(&mut state, group_num, set_color) {
+                eprintln!("{}", err);
             }
         }
     }

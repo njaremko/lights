@@ -1,12 +1,13 @@
+use dirs;
 use reqwest;
 use serde_json::{self, Value};
 use std::collections::HashMap;
-use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::io::{self, stdin, stdout, Write};
 use std::path::PathBuf;
-use structs::*;
+use crate::structs::*;
+use regex::Regex;
 
 pub fn get_str_line(line: &str) -> Result<String, io::Error> {
     let mut s = String::new();
@@ -24,7 +25,7 @@ pub fn save_db(db: &DB) -> Result<(), io::Error> {
 }
 
 pub fn get_config_path() -> PathBuf {
-    let mut path = env::home_dir().unwrap();
+    let mut path = dirs::home_dir().unwrap();
     path.push(".light_config");
     path
 }
@@ -34,7 +35,7 @@ pub fn auto_pair_hue(mut state: State) -> Result<String, reqwest::Error> {
         let mut resp = reqwest::get("https://www.meethue.com/api/nupnp").unwrap();
         let mut content = String::new();
         if let Err(err) = resp.read_to_string(&mut content) {
-            eprintln!("{}", err);
+            eprintln!("Error: {}", err);
         }
         let v: Value = serde_json::from_str(&content).unwrap();
         if v[0]["internalipaddress"] != Value::Null {
@@ -58,7 +59,7 @@ pub fn pair_hue(mut state: State) -> Result<String, reqwest::Error> {
         let temp = match get_str_line("Enter Hue Bridge IP: ") {
             Ok(input) => input,
             Err(err) => {
-                println!("{}", err);
+                eprintln!("Error: {}", err);
                 String::new()
             }
         };
@@ -77,16 +78,16 @@ pub fn pair_hue(mut state: State) -> Result<String, reqwest::Error> {
         let mut json = HashMap::new();
         json.insert("devicetype", "lights cli");
 
-        let v: Value = state.client.post(&uri)?.json(&json)?.send()?.json()?;
+        let v: Value = state.client.post(&uri).json(&json).send()?.json()?;
 
         if v[0]["error"] != Value::Null {
             String::from("Press the pairing button on Hue Bridge and run init again...")
         } else if v[0]["success"]["username"] != Value::Null {
             state.db.username = match v[0]["success"]["username"].as_str() {
-                Some(val) => String::from(val),
+                Some(val) => val.to_string(),
                 None => String::new(),
             };
-            if let Err(err) = save_db(&state.db)  {
+            if let Err(err) = save_db(&state.db) {
                 eprintln!("Failed to save db: {}", err);
             }
             String::from("Pairing Successful!")
@@ -95,4 +96,16 @@ pub fn pair_hue(mut state: State) -> Result<String, reqwest::Error> {
         }
     };
     Ok(output)
+}
+
+pub fn parse_lights(input: &str) -> Vec<Regex> {
+    let mut result = Vec::new();
+    let i = input.split(",");
+    for light in i {
+        match Regex::new(&format!("(?i){}", &light)) {
+            Ok(regex) => result.push(regex),
+            Err(err) => eprintln!("Failed to parse: {} because {}", &light, err),
+        }
+    }
+    result
 }

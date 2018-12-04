@@ -14,16 +14,16 @@ mod structs;
 mod utils;
 
 use clap::{App, Arg, SubCommand};
-use group_actions::*;
-use light_actions::*;
-use structs::*;
-use utils::*;
+use crate::group_actions::*;
+use crate::light_actions::*;
+use crate::structs::*;
+use crate::utils::*;
 
 fn main() {
     let state = State::new();
 
     let matches = App::new("lights")
-        .version("0.1.0")
+        .version("0.1.5")
         .author("Nathan J. <njaremko@gmail.com>")
         .about("Home Lighting Controller")
         .subcommand(SubCommand::with_name("init").about("Pair with Hue Bridge"))

@@ -1,5 +1,5 @@
 use reqwest;
-use utils::get_config_path;
+use crate::utils::get_config_path;
 use serde_json;
 use std::fs::File;
 use std::io::prelude::*;
@@ -13,7 +13,7 @@ impl State {
     pub fn new() -> State {
         let path = get_config_path();
         State {
-            client: reqwest::Client::new().unwrap(),
+            client: reqwest::Client::new(),
             db: if path.exists() {
                 let mut s = String::new();
                 File::open(&path).unwrap().read_to_string(&mut s).unwrap();

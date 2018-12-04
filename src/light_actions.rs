@@ -1,16 +1,16 @@
-use regex::Regex;
 use reqwest;
 use serde_json;
 use std::collections::HashMap;
 use std::io::Read;
-use structs::*;
+use crate::structs::*;
+use crate::utils::*;
 
 fn get_light_map(state: &mut State) -> Result<HashMap<String, Light>, reqwest::Error> {
     let uri = format!("http://{}/api/{}/lights", &state.db.ip, &state.db.username);
     let mut resp = reqwest::get(&uri)?;
     let mut content = String::new();
     if let Err(err) = resp.read_to_string(&mut content) {
-        eprintln!("{}", err);
+        eprintln!("Error: {}", err);
     }
     let v: HashMap<String, Light> = serde_json::from_str(&content).unwrap();
     Ok(v)
@@ -32,17 +32,19 @@ fn toggle_light(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
         "http://{}/api/{}/lights/{}/state",
         &state.db.ip, &state.db.username, id
     );
-    state.client.put(&uri)?.json(&json)?.send()?;
+    state.client.put(&uri).json(&json).send()?;
     Ok(())
 }
 
 pub fn light_on(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_light_map(&mut state)?;
     for (light_num, light) in &v {
-        if re.is_match(&light.name) {
-            if let Err(err) = toggle_light(&mut state, light_num, true) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if re.is_match(&light.name) {
+                if let Err(err) = toggle_light(&mut state, light_num, true) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
@@ -50,13 +52,15 @@ pub fn light_on(mut state: State, search: &str) -> Result<String, reqwest::Error
 }
 
 pub fn light_off(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_light_map(&mut state)?;
 
     for (light_num, light) in &v {
-        if re.is_match(&light.name) {
-            if let Err(err) = toggle_light(&mut state, light_num, false) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if re.is_match(&light.name) {
+                if let Err(err) = toggle_light(&mut state, light_num, false) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
@@ -64,13 +68,15 @@ pub fn light_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
 }
 
 pub fn light_off_except(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_light_map(&mut state)?;
 
     for (light_num, light) in &v {
-        if !re.is_match(&light.name) {
-            if let Err(err) = toggle_light(&mut state, light_num, false) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if !re.is_match(&light.name) {
+                if let Err(err) = toggle_light(&mut state, light_num, false) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
@@ -82,7 +88,7 @@ pub fn all_lights_off(mut state: State) -> Result<String, reqwest::Error> {
 
     for light_num in v.keys() {
         if let Err(err) = toggle_light(&mut state, light_num, false) {
-            println!("{}", err);
+            eprintln!("Error: {}", err);
         }
     }
     Ok(String::from("Turning matches off!"))
@@ -92,7 +98,7 @@ pub fn sleep(mut state: State) -> Result<String, reqwest::Error> {
     let v = get_light_map(&mut state)?;
     for light_num in v.keys() {
         if let Err(err) = toggle_light(&mut state, light_num, false) {
-            eprintln!("{}", err);
+            eprintln!("Error: {}", err);
         }
     }
     Ok(String::from("Goodnight!"))

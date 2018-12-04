@@ -1,17 +1,17 @@
-use colors::*;
-use regex::Regex;
+use crate::colors::*;
 use reqwest;
 use serde_json;
 use std::collections::HashMap;
 use std::io::Read;
-use structs::*;
+use crate::structs::*;
+use crate::utils::parse_lights;
 
 fn get_group_map(state: &mut State) -> Result<HashMap<String, Group>, reqwest::Error> {
     let uri = format!("http://{}/api/{}/groups", &state.db.ip, &state.db.username);
     let mut resp = reqwest::get(&uri)?;
     let mut content = String::new();
     if let Err(err) = resp.read_to_string(&mut content) {
-        eprintln!("{}", err);
+        eprintln!("Error: {}", err);
     }
     let v: HashMap<String, Group> = serde_json::from_str(&content).unwrap();
     Ok(v)
@@ -33,18 +33,20 @@ fn toggle_group(state: &mut State, id: &str, on: bool) -> Result<(), reqwest::Er
         "http://{}/api/{}/groups/{}/action",
         &state.db.ip, &state.db.username, id
     );
-    state.client.put(&uri)?.json(&json)?.send()?;
+    state.client.put(&uri).json(&json).send()?;
     Ok(())
 }
 
 pub fn group_on(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
-        if re.is_match(&group.name) {
-            if let Err(err) = toggle_group(&mut state, group_num, true) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if re.is_match(&group.name) {
+                if let Err(err) = toggle_group(&mut state, group_num, true) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
@@ -52,13 +54,15 @@ pub fn group_on(mut state: State, search: &str) -> Result<String, reqwest::Error
 }
 
 pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
-        if re.is_match(&group.name) {
-            if let Err(err) = toggle_group(&mut state, group_num, false) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if re.is_match(&group.name) {
+                if let Err(err) = toggle_group(&mut state, group_num, false) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
@@ -66,13 +70,15 @@ pub fn group_off(mut state: State, search: &str) -> Result<String, reqwest::Erro
 }
 
 pub fn group_off_except(mut state: State, search: &str) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_group_map(&mut state)?;
 
     for (group_num, group) in &v {
-        if !re.is_match(&group.name) {
-            if let Err(err) = toggle_group(&mut state, group_num, false) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if !re.is_match(&group.name) {
+                if let Err(err) = toggle_group(&mut state, group_num, false) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
@@ -85,7 +91,7 @@ pub fn set_group_color(state: &mut State, id: &str, color: &Color) -> Result<(),
         "http://{}/api/{}/groups/{}/action",
         &state.db.ip, &state.db.username, id
     );
-    state.client.put(&uri)?.json(&json)?.send()?;
+    state.client.put(&uri).json(&json).send()?;
     Ok(())
 }
 
@@ -94,7 +100,7 @@ pub fn group_color(
     search: &str,
     search_color: &str,
 ) -> Result<String, reqwest::Error> {
-    let re = Regex::new(&format!("(?i){}", &search)).expect("Failed to parse regex");
+    let regexes = parse_lights(&search);
     let v = get_group_map(&mut state)?;
     let mut set_color = &Color::Cyan;
     for color in Color::iterator() {
@@ -104,9 +110,11 @@ pub fn group_color(
     }
 
     for (group_num, group) in &v {
-        if re.is_match(&group.name) {
-            if let Err(err) = set_group_color(&mut state, group_num, set_color) {
-                eprintln!("{}", err);
+        for re in &regexes {
+            if re.is_match(&group.name) {
+                if let Err(err) = set_group_color(&mut state, group_num, set_color) {
+                    eprintln!("Error: {}", err);
+                }
             }
         }
     }
